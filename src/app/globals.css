@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+:root {
+  --mm-bg: #0f0a1a;
+  --mm-panel: #17111f;
+  --mm-border: #2a2233;
+  --mm-text: #f2eef7;
+  --mm-muted: #9c8fb0;
+  --mm-accent-1: #ff5fa2;
+  --mm-accent-2: #7c5cff;
+}
+
+body {
+  background: radial-gradient(circle at top, #1c1330 0%, var(--mm-bg) 55%);
+  color: var(--mm-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
