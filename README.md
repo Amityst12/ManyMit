@@ -34,10 +34,20 @@ exactly what to walk you through vs. what only you can click.
 ### 1. Create your Meta App
 
 1. [developers.facebook.com/apps](https://developers.facebook.com/apps) → **Create App** → **Other** → **Business**.
-2. Add the **Facebook Login for Business** + **Instagram Graph API** products - the wizard will have you connect a Facebook Page.
+2. Add the **Facebook Login for Business** and **Instagram** products - the wizard will have you connect a Facebook Page.
 3. You need a **Facebook Page** linked to an **Instagram Professional (Business/Creator) account**. No Page yet? Convert your IG to Professional in the app, then link it via Meta Business Suite.
-4. **App Roles → Roles** → add yourself as an **Instagram Tester**. Then on your phone: Instagram app → **Settings → Apps and Websites → Tester Invites → Accept**. (You can add up to 24 more people the same way - friends, clients, whoever.)
-5. **App Settings → Basic** → grab your **App ID** and **App Secret**.
+4. **App roles → Roles** → add yourself as an **Instagram Tester**. Then on your phone: Instagram app → **Settings → Apps and Websites → Tester Invites → Accept**. (You can add up to 24 more people the same way - friends, clients, whoever.)
+5. **App settings → Basic** → grab your **App ID** and **App Secret** (the secret is behind a "Show" button and will ask for your password).
+
+Leave **App Mode** on **Development**. That's what makes the tester trick work:
+in Development mode your app can fully message the accounts that hold a role
+on it (you, plus anyone who accepted a tester invite), with no App Review.
+Flipping it to Live is what would drag you into the review queue.
+
+> Already run another Instagram tool (or your own SaaS) on a Meta app? Create a
+> **separate** app for this. The webhook callback URL is per-app, so pointing an
+> existing app at ManyMit would hijack webhook delivery away from whatever is
+> already using it.
 
 ### 2. Install
 
@@ -102,10 +112,25 @@ infrastructure.
 
 ## What's in here (on purpose, kept small)
 
-- ✅ Typo/emoji-tolerant keyword matching → auto-DM, on Story replies and comments
-- ✅ Optional button + link in the DM
+- ✅ Auto-DM on **Story replies** and **post comments**
+- ✅ Optional button + link in the DM, and `{name}` in your message text
 - ✅ Everything local - your tokens and automations live in `data/db.json` on your machine, nowhere else
 - ❌ No accounts, billing, analytics dashboard, CRM, or mentions automation - that's a different, bigger product. This one does one thing.
+
+### How matching actually works (read this one)
+
+The keyword has to be **the whole message**, not a word inside it. Casing,
+emoji, punctuation and repeated letters are all forgiven, so for the keyword
+`GUIDE` these all fire:
+
+`guide` · `GUIDE!!` · `Guideee` · `guide 🔥`
+
+...but **"send me the guide"** does not. Tell people to reply with just the
+word.
+
+Also note: a plain DM does **not** trigger anything. Only replies to your
+Story and comments on your posts do - so your normal inbox conversations are
+never auto-answered.
 
 ## Under the hood
 

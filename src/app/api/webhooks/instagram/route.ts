@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { getMetaConfig, getProfile, incrementReplyCount, isDuplicateWebhookEvent, listAutomations } from "@/lib/store";
 import { findMatchingAutomation } from "@/lib/instagram/match";
-import { fetchInstagramProfile, logMetaApiError, sendCommentReply, sendDirectMessage } from "@/lib/instagram/api";
+import { fetchInstagramProfile, logMetaApiError, sendDirectMessage } from "@/lib/instagram/api";
 
 // --- Webhook payload shapes (subset of what Meta sends) ---
 interface WebhookMessage {
@@ -173,15 +173,5 @@ async function handleInteraction(args: {
     await incrementReplyCount(automation.id);
   } else {
     await logMetaApiError("DM send", dmRes);
-  }
-
-  // Optional public "thank you" reply under the comment, in addition to the DM.
-  if (commentId && automation.triggerType === "comment") {
-    const publicReplyRes = await sendCommentReply(
-      commentId,
-      `Sent you a DM, ${placeholderName}! Check your inbox 📩`,
-      profile.pageAccessToken
-    );
-    if (!publicReplyRes.ok) await logMetaApiError("public comment reply", publicReplyRes);
   }
 }

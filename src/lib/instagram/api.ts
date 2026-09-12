@@ -114,19 +114,13 @@ export async function sendDirectMessage(
   });
 }
 
-export async function sendCommentReply(commentId: string, messageText: string, pageToken: string) {
-  return fetch(`${GRAPH_BASE}/${commentId}/replies`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: messageText, access_token: pageToken }),
-  });
-}
-
 export async function subscribePageToWebhooks(pageId: string, pageAccessToken: string) {
   const params = new URLSearchParams({
-    // Only fields the webhook route actually handles - "mentions" isn't
-    // implemented in this trimmed-down core, so we don't subscribe to it.
-    subscribed_fields: "messages,comments",
+    // "messages" is the only field this endpoint takes for Instagram, and it's
+    // what Lazyspond subscribes in production. Comment events are delivered via
+    // the app-level Webhooks subscription configured in the Meta dashboard, not
+    // here - adding "comments" to this call risks failing the whole request.
+    subscribed_fields: "messages",
     access_token: pageAccessToken,
   });
   const res = await fetch(`${GRAPH_BASE}/${pageId}/subscribed_apps?${params.toString()}`, { method: "POST" });

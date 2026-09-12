@@ -30,10 +30,17 @@ do it and paste back what you need).
 
 Tell them to:
 1. Go to https://developers.facebook.com/apps → **Create App** → type **Other** → **Business**.
-2. In the app dashboard, add **Facebook Login for Business** and the **Instagram Graph API** product. The setup wizard prompts them to connect a Facebook Page.
+2. In the app dashboard, add the **Facebook Login for Business** and **Instagram** products. The setup wizard prompts them to connect a Facebook Page.
 3. They need a **Facebook Page** linked to an **Instagram Professional (Business/Creator) account**. If they don't have one, they convert their IG account to Professional in the Instagram app, then link it to a Page via Meta Business Suite.
-4. **App Roles → Roles** → add themselves (and anyone else who'll use it, up to 24 more) as **Instagram Tester**. Then from the Instagram app on each tester's phone: **Settings → Apps and Websites → Tester Invites → Accept**. This step is what lets them message without Meta's App Review - do not skip explaining it.
-5. **App Settings → Basic** → copy **App ID** and **App Secret**.
+4. **App roles → Roles** → add themselves (and anyone else who'll use it, up to 24 more) as **Instagram Tester**. Then from the Instagram app on each tester's phone: **Settings → Apps and Websites → Tester Invites → Accept**. This step is what lets them message without Meta's App Review - do not skip explaining it.
+5. Leave **App Mode** on **Development**. Development mode is precisely what grants full messaging access to accounts holding a role on the app, review-free; switching to Live is what would require App Review.
+6. **App settings → Basic** → copy **App ID** and **App Secret**.
+
+**Make sure this is a dedicated app.** The webhook callback URL is configured
+per-app, so if they reuse an app that already powers another Instagram tool,
+pointing it at ManyMit's tunnel hijacks webhook delivery away from that tool
+and breaks it for everyone using it. If they mention an existing app, stop and
+have them create a fresh one.
 
 If they get stuck on "no Facebook Page found" or "no Instagram account linked to page" later during OAuth, it means step 3 wasn't completed correctly - send them back there.
 
@@ -129,6 +136,8 @@ plenty - don't repeat it every session or push if they don't react to it.
 | Facebook shows "URL Blocked" / redirect mismatch on login | They clicked "Connect Instagram" while viewing the app at `localhost` instead of the public tunnel URL | Reopen the app at its public tunnel URL and retry from there |
 | Webhook returns 403 / never verifies | The verify token typed into the Meta dashboard doesn't match the one the app generated | Reopen the Meta App form's saved-state screen (or the "Meta App dashboard values" panel on the home page) to get the exact current token |
 | DM never arrives, no log line at all | Webhook not subscribed to `messages`/`comments`, or tunnel URL changed since last Meta dashboard update | Re-check Meta App → Webhooks subscription fields; re-paste current tunnel URL if using the Cloudflare quick tunnel |
+| Log says "No matching automation for ..." | The keyword must be the **entire** message, not a word within it ("send me the guide" won't match `guide`) | Either tell people to reply with just the keyword, or add the longer phrase as its own automation |
+| Nothing happens when they DM the keyword directly | By design: only Story replies and post comments trigger automations, plain DMs are ignored so normal conversations aren't auto-answered | Test via a Story reply or a comment instead |
 | `EADDRINUSE` on port 3000 | Another process (or a previous `npm run dev`) still running | Kill it, or run with `PORT=3001 npm run dev` |
 
 ## Code map (for when you're asked to change something)
