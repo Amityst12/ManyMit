@@ -1,4 +1,4 @@
-# ManyMit 💌
+# ManyMit
 
 Your own Instagram auto-reply bot. Runs on your laptop. Costs nothing.
 
