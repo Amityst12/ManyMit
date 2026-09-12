@@ -1,42 +1,45 @@
-# ManyMit
+# ManyMit 💌
 
-Run your own Instagram **keyword → DM automation**, 100% on your machine. No SaaS,
-no monthly fee, no waiting for Meta's App Review — you create your own free Meta
-app and add yourself as a tester on it, which Meta allows instantly.
+Your own Instagram auto-reply bot. Runs on your laptop. Costs nothing.
 
-> Someone replies "GUIDE" to your Story or comments it on a post → ManyMit
-> automatically sends them a DM with your link. That's the whole product.
+> Someone comments **"GUIDE"** on your post or replies to your Story with it →
+> they instantly get a DM from you with your link. That's the whole app.
 
-Made by [@amit.yehoshaphat](https://www.instagram.com/amit.yehoshaphat/) — free and
-open source, forever.
+No monthly fee, no SaaS, no Meta App Review queue — just your own Meta app,
+your own machine, your own rules.
 
----
+### 🩷 Enjoying this?
 
-## How the "no approval needed" part works
-
-Meta normally requires **App Review** before an app can message the public. But
-every Meta app can freely add up to 25 **Instagram Testers** to itself — no review,
-just an instant accept — as long as the tester *is* the developer. Since you're
-building this app for yourself, you are both the developer and the tester, so you
-get full messaging access immediately, for your own account.
-
-The trade-off: this only works for accounts you personally add as testers (you,
-or up to 24 friends/clients who accept your tester invite). It is not a path to
-messaging the general public without review — that's Meta's line, not ours.
+This is free and made by **[@amit.yehoshaphat](https://www.instagram.com/amit.yehoshaphat/)**.
+If it's saving you time (or making you money), the best "thank you" is a follow. That's it, that's the ask.
 
 ---
 
-## Setup
+## The 60-second version
+
+1. You make a free Meta Developer App and add yourself as an **Instagram Tester** on it — this is the trick that skips Meta's App Review entirely, because you're both the developer *and* the tester.
+2. You drop that app's ID + Secret into a local `.env.local` file.
+3. `npm run dev` boots the app **and** a public tunnel together, so Meta can actually reach your laptop.
+4. You click "Connect Instagram," add a keyword → DM rule, done.
+
+Prefer to skip reading and just have an AI do it? Point Claude Code, Gemini
+CLI, or any terminal-based coding agent at this repo and say *"set this up
+for me"* — it's already been briefed via [`AGENTS.md`](./AGENTS.md) and knows
+exactly what to walk you through vs. what only you can click.
+
+---
+
+## Setup, step by step
 
 ### 1. Create your Meta App
 
-1. Go to [developers.facebook.com/apps](https://developers.facebook.com/apps) → **Create App** → type **"Other"** → **"Business"**.
-2. In the app dashboard, add the **Instagram** product (via "Facebook Login for Business" + Instagram Graph API — the app setup wizard will guide you to link a Facebook Page).
-3. You'll need a **Facebook Page** linked to an **Instagram Professional (Business/Creator) account**. If you don't have one yet, convert your IG account to Professional in the Instagram app, then link it to a Facebook Page in Meta Business Suite.
-4. Go to **App Roles → Roles**, add yourself (and anyone else who'll use this) as an **Instagram Tester**. Then, from the Instagram app on the tester's phone: **Settings → Apps and Websites → Tester Invites → Accept**.
-5. Copy your **App ID** and **App Secret** from **App Settings → Basic**.
+1. [developers.facebook.com/apps](https://developers.facebook.com/apps) → **Create App** → **Other** → **Business**.
+2. Add the **Facebook Login for Business** + **Instagram Graph API** products — the wizard will have you connect a Facebook Page.
+3. You need a **Facebook Page** linked to an **Instagram Professional (Business/Creator) account**. No Page yet? Convert your IG to Professional in the app, then link it via Meta Business Suite.
+4. **App Roles → Roles** → add yourself as an **Instagram Tester**. Then on your phone: Instagram app → **Settings → Apps and Websites → Tester Invites → Accept**. (You can add up to 24 more people the same way — friends, clients, whoever.)
+5. **App Settings → Basic** → grab your **App ID** and **App Secret**.
 
-### 2. Configure ManyMit
+### 2. Configure & install
 
 ```bash
 git clone https://github.com/Amityst12/ManyMit.git
@@ -45,31 +48,28 @@ npm install
 cp .env.example .env.local
 ```
 
-Edit `.env.local`:
+Open `.env.local` and fill in:
 
 ```env
 META_APP_ID=your_app_id
 META_APP_SECRET=your_app_secret
-INSTAGRAM_VERIFY_TOKEN=pick-any-secret-string
+INSTAGRAM_VERIFY_TOKEN=make-up-any-secret-string
 ```
 
-### 3. (Recommended) Get a free stable tunnel domain
+### 3. (Optional but nice) get a permanent tunnel URL
 
-Meta needs a public HTTPS URL to reach your local server. Without a fixed domain,
-you'll have to update your Meta App's redirect/webhook URLs every time you restart.
+Skip this and ManyMit uses a free instant Cloudflare tunnel — zero signup,
+but the URL changes every restart, so you'll re-paste it into your Meta App
+each time. For a URL that never changes:
 
-1. Sign up free at [dashboard.ngrok.com](https://dashboard.ngrok.com) (no credit card).
-2. **Domains → New Domain** → copy the generated `*.ngrok-free.app` domain.
-3. **Your Authtoken** page → copy your authtoken.
-4. Add both to `.env.local`:
+1. Free account at [dashboard.ngrok.com](https://dashboard.ngrok.com) (no card).
+2. **Domains → New Domain** → copy it.
+3. **Your Authtoken** → copy that too.
 
 ```env
 NGROK_AUTHTOKEN=your_authtoken
 NGROK_DOMAIN=your-domain.ngrok-free.app
 ```
-
-Skipping this step still works — ManyMit falls back to a free Cloudflare quick
-tunnel — but that URL changes every time you restart the app.
 
 ### 4. Run it
 
@@ -77,7 +77,7 @@ tunnel — but that URL changes every time you restart the app.
 npm run dev
 ```
 
-The terminal will print your public URL, e.g.:
+Your terminal prints your public URL and the two links you need:
 
 ```
 🌍 Public URL: https://your-domain.ngrok-free.app
@@ -85,44 +85,40 @@ The terminal will print your public URL, e.g.:
    Webhook callback URL → https://your-domain.ngrok-free.app/api/webhooks/instagram
 ```
 
-### 5. Finish the Meta App configuration
+Paste those into your Meta App dashboard:
+- **Facebook Login for Business → Settings → Valid OAuth Redirect URIs** → the OAuth redirect URI.
+- **Webhooks → Add Callback URL** → the webhook URL + your `INSTAGRAM_VERIFY_TOKEN` → **Subscribe** to `messages` and `comments`.
 
-Back in your Meta App dashboard:
+### 5. Connect & go
 
-- **Facebook Login for Business → Settings**: paste the OAuth redirect URI into **Valid OAuth Redirect URIs**.
-- **Webhooks**: **Add Callback URL** → paste the webhook callback URL, and use the same `INSTAGRAM_VERIFY_TOKEN` value you put in `.env.local` → **Subscribe** to `messages` and `comments`.
+Open [localhost:3000](http://localhost:3000) → **Connect Instagram** → log in
+→ pick your Page → add a keyword automation. Test it by replying to your own
+Story with the keyword from another account. DM should land in seconds.
 
-### 6. Connect & create your first automation
-
-Open [http://localhost:3000](http://localhost:3000):
-
-1. Click **Connect Instagram**, log in with Facebook, pick your Page.
-2. Add an automation: keyword `GUIDE` → reply message with your link.
-3. Have someone reply "GUIDE" to your Story or comment it on a post — you should see a DM land within seconds.
+Just leave your laptop running with `npm run dev` open — that's the whole
+infrastructure.
 
 ---
 
-## What's in scope (and what isn't)
+## What's in here (on purpose, kept small)
 
-This is a trimmed, single-user, self-hosted core — not a clone of a full SaaS:
+- ✅ Typo/emoji-tolerant keyword matching → auto-DM, on Story replies and comments
+- ✅ Optional button + link in the DM
+- ✅ Everything local — your tokens and automations live in `data/db.json` on your machine, nowhere else
+- ❌ No accounts, billing, analytics dashboard, CRM, or mentions automation — that's a different, bigger product. This one does one thing.
 
-- ✅ Keyword matching (typo/emoji tolerant) → automatic DM, on Story replies and comments
-- ✅ Optional CTA button in the DM
-- ✅ Runs fully locally — your tokens and automations live in `data/db.json` on your machine, nowhere else
-- ❌ No multi-user accounts, billing, or analytics dashboard
-- ❌ No lead CRM, mentions automation, or icebreakers — keeping this small on purpose
+## Under the hood
+
+Next.js (App Router) + a local JSON file ([lowdb](https://github.com/typicode/lowdb))
+instead of a database — nothing to host, nothing to pay for. Talks straight
+to the official [Meta Graph API](https://developers.facebook.com/docs/instagram-platform)
+for messaging.
+
+## Security
+
+- Your App Secret and tokens live only in `.env.local` and `data/db.json`, both git-ignored by default. Don't commit them, don't share them.
+- Every webhook request is checked against Meta's signature before anything runs.
 
 ---
 
-## Tech stack
-
-Next.js (App Router) + a local JSON file store ([lowdb](https://github.com/typicode/lowdb)) —
-no database server, no Supabase, nothing to host. The Instagram messaging logic
-talks directly to the official [Meta Graph API](https://developers.facebook.com/docs/instagram-platform).
-
-## Security notes
-
-- Your Meta App Secret and access tokens are stored only in `.env.local` and
-  `data/db.json` on your own machine — both are git-ignored by default.
-- Webhook requests are verified against Meta's HMAC signature before being processed.
-- Don't commit `.env.local` or the `data/` folder, and don't share your App Secret.
+Made with ❤️ by [@amit.yehoshaphat](https://www.instagram.com/amit.yehoshaphat/) — free and open source, forever.
