@@ -10,7 +10,7 @@ export default function Footer() {
       >
         @amit.yehoshaphat
       </a>{" "}
-      — free &amp; open source, forever.
+      - free &amp; open source, forever.
     </footer>
   );
 }

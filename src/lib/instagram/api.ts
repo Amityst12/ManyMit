@@ -124,7 +124,7 @@ export async function sendCommentReply(commentId: string, messageText: string, p
 
 export async function subscribePageToWebhooks(pageId: string, pageAccessToken: string) {
   const params = new URLSearchParams({
-    // Only fields the webhook route actually handles — "mentions" isn't
+    // Only fields the webhook route actually handles - "mentions" isn't
     // implemented in this trimmed-down core, so we don't subscribe to it.
     subscribed_fields: "messages,comments",
     access_token: pageAccessToken,

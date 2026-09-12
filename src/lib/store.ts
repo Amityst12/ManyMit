@@ -87,7 +87,7 @@ export async function saveMetaConfig(appId: string, appSecret: string): Promise<
   const db = await getDb();
   await db.read();
   // Keep the existing verify token on update (it's already pasted into the
-  // Meta dashboard) — only generate a fresh one the first time.
+  // Meta dashboard) - only generate a fresh one the first time.
   const verifyToken = db.data.metaConfig?.verifyToken || crypto.randomUUID().replace(/-/g, "");
   const config: MetaConfig = { appId, appSecret, verifyToken };
   db.data.metaConfig = config;

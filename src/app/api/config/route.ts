@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getMetaConfig, saveMetaConfig } from "@/lib/store";
 
-// Never send the App Secret back down to the browser once saved — the UI
+// Never send the App Secret back down to the browser once saved - the UI
 // only needs to know it's configured, not what it is.
 export async function GET() {
   const config = await getMetaConfig();

@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
   const metaConfig = await getMetaConfig();
   if (!metaConfig) {
-    console.error("Meta App isn't configured yet — set it up on the ManyMit home page first.");
+    console.error("Meta App isn't configured yet - set it up on the ManyMit home page first.");
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     const sigBuf = Buffer.from(signature, "hex");
     const expBuf = Buffer.from(expected, "hex");
     if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
-      console.error("Invalid webhook signature — rejecting.");
+      console.error("Invalid webhook signature - rejecting.");
       return new NextResponse("Forbidden", { status: 403 });
     }
 
@@ -152,7 +152,7 @@ async function handleInteraction(args: {
     return;
   }
 
-  console.log(`✅ Match found for keyword "${automation.keyword}" — replying to ${senderId}...`);
+  console.log(`✅ Match found for keyword "${automation.keyword}" - replying to ${senderId}...`);
 
   const { displayName } = await fetchInstagramProfile(senderId, profile.pageAccessToken);
   const placeholderName = displayName || "there";

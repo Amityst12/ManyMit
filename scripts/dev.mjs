@@ -81,7 +81,7 @@ function printBanner(url, isStable) {
   console.log(`   OAuth redirect URI  →  ${url}/api/auth/callback/instagram`);
   console.log(`   Webhook callback URL →  ${url}/api/webhooks/instagram`);
   if (!isStable) {
-    console.log("   ⚠️  This is a free Cloudflare quick tunnel — the URL above");
+    console.log("   ⚠️  This is a free Cloudflare quick tunnel - the URL above");
     console.log("       will change next time you restart. Update it in your");
     console.log("       Meta App dashboard whenever it does. For a permanent");
     console.log("       URL, set NGROK_AUTHTOKEN + NGROK_DOMAIN in .env.local");

@@ -69,7 +69,7 @@ export default function Dashboard() {
         <div className="mb-8 rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-200">
           ⚠️ You&apos;re viewing this at <code>localhost</code>. Meta needs to redirect back to your{" "}
           <strong>public tunnel URL</strong> instead (printed in the terminal where you ran{" "}
-          <code>npm run dev</code>) — open that URL in your browser before connecting Instagram, or
+          <code>npm run dev</code>) - open that URL in your browser before connecting Instagram, or
           the login will fail with a redirect mismatch.
         </div>
       )}
@@ -138,7 +138,7 @@ function MetaAppForm({
   if (saved) {
     return (
       <section className="mb-8 rounded-2xl border border-white/10 bg-[var(--mm-panel)] p-6">
-        <h2 className="mb-3 text-lg font-semibold">✅ Saved — now finish the Meta dashboard side</h2>
+        <h2 className="mb-3 text-lg font-semibold">✅ Saved - now finish the Meta dashboard side</h2>
         <p className="mb-4 text-sm text-[var(--mm-muted)]">
           Go back to your Meta App and paste these in:
         </p>
@@ -182,7 +182,7 @@ function MetaAppForm({
         >
           developers.facebook.com/apps
         </a>{" "}
-        (see <code>README.md</code> for the exact clicks — no App Review needed, you add yourself as
+        (see <code>README.md</code> for the exact clicks - no App Review needed, you add yourself as
         an Instagram Tester on your own app), then paste its credentials here:
       </p>
       <form onSubmit={save} className="space-y-3">
@@ -203,7 +203,7 @@ function MetaAppForm({
         />
         {config?.configured && (
           <p className="text-xs text-[var(--mm-muted)]">
-            Already configured — re-enter both fields to change them (the secret isn&apos;t shown back for security).
+            Already configured - re-enter both fields to change them (the secret isn&apos;t shown back for security).
           </p>
         )}
         <button
@@ -214,7 +214,7 @@ function MetaAppForm({
         </button>
       </form>
       <p className="mt-4 text-xs text-[var(--mm-muted)]">
-        Saved locally to <code>data/db.json</code> on this machine only — never sent anywhere else,
+        Saved locally to <code>data/db.json</code> on this machine only - never sent anywhere else,
         never committed to git.
       </p>
     </section>
@@ -354,7 +354,7 @@ function AutomationsManager({
 
       <div className="mb-6 space-y-3">
         {automations.length === 0 && (
-          <p className="text-sm text-[var(--mm-muted)]">No automations yet — create your first one below.</p>
+          <p className="text-sm text-[var(--mm-muted)]">No automations yet - create your first one below.</p>
         )}
         {automations.map((a) => (
           <div

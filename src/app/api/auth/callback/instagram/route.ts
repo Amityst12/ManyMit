@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/?error=invalid_request", baseUrl));
   }
   if (!cookieState || cookieState !== state) {
-    console.error("OAuth state mismatch — possible CSRF attempt, rejecting.");
+    console.error("OAuth state mismatch - possible CSRF attempt, rejecting.");
     return NextResponse.redirect(new URL("/?error=csrf_detected", baseUrl));
   }
 
