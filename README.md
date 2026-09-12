@@ -116,6 +116,19 @@ Your laptop *is* the server, so:
 - **Free tunnel = new URL on every restart.** The Cloudflare quick tunnel hands you a different address each run, and you'd have to re-paste it into the Meta dashboard each time. If you plan to leave this running, do step 3 and get the free ngrok static domain - it's the difference between set-it-and-forget-it and re-configuring daily.
 - **Reconnect about every 60 days.** Meta's long-lived tokens expire. When that happens DMs stop and your terminal prints a "connection has expired" line - just open ManyMit and hit **Connect Instagram** again.
 
+### Rather not run a server at all?
+
+Totally fair. Everything above is the DIY route and it does ask something of
+you: your own Meta app, a tunnel, a machine that stays awake, a reconnect
+every couple of months.
+
+I also run the hosted version of this exact thing at
+**[Lazyspond.com](https://lazyspond.com)** - same keyword-to-DM automation,
+nothing to install, nothing to keep running, and there's a **free plan** you
+can start on right now. Same person, same idea, someone else's servers.
+
+Either way this repo stays free and open source. Pick whichever one fits you.
+
 ---
 
 ## What's in here (on purpose, kept small)
@@ -155,3 +168,5 @@ for messaging.
 ---
 
 Made with ❤️ by [@amit.yehoshaphat](https://www.instagram.com/amit.yehoshaphat/) - free and open source, forever.
+
+Want it hosted instead of self-run? [Lazyspond.com](https://lazyspond.com) - free plan, zero setup.
