@@ -108,6 +108,14 @@ another account. DM should land in seconds.
 Just leave your laptop running with `npm run dev` open - that's the whole
 infrastructure.
 
+### Keeping it alive (the honest part)
+
+Your laptop *is* the server, so:
+
+- **Sleep = downtime.** If the lid closes or the machine sleeps, Meta can't reach you and those DMs never go out. Meta retries for a while, but it also disables webhooks that keep failing, so for anything serious keep the machine awake (or run it on a spare machine / mini PC you leave on).
+- **Free tunnel = new URL on every restart.** The Cloudflare quick tunnel hands you a different address each run, and you'd have to re-paste it into the Meta dashboard each time. If you plan to leave this running, do step 3 and get the free ngrok static domain - it's the difference between set-it-and-forget-it and re-configuring daily.
+- **Reconnect about every 60 days.** Meta's long-lived tokens expire. When that happens DMs stop and your terminal prints a "connection has expired" line - just open ManyMit and hit **Connect Instagram** again.
+
 ---
 
 ## What's in here (on purpose, kept small)

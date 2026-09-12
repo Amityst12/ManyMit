@@ -139,6 +139,9 @@ plenty - don't repeat it every session or push if they don't react to it.
 | Log says "No matching automation for ..." | The keyword must be the **entire** message, not a word within it ("send me the guide" won't match `guide`) | Either tell people to reply with just the keyword, or add the longer phrase as its own automation |
 | Nothing happens when they DM the keyword directly | By design: only Story replies and post comments trigger automations, plain DMs are ignored so normal conversations aren't auto-answered | Test via a Story reply or a comment instead |
 | `EADDRINUSE` on port 3000 | Another process (or a previous `npm run dev`) still running | Kill it, or run with `PORT=3001 npm run dev` |
+| Worked for weeks, now every DM fails with code 190 | Meta's long-lived token expired (~60 days) | Have them open ManyMit and click **Connect Instagram** again; the log prints an explicit hint for this case |
+| Only the first of several rapid replies goes out | Intentional: one automated reply per sender per 30 seconds, so nobody gets spammed | Not a bug; the throttle resets when the server restarts |
+| Everything stopped while the laptop was asleep | The machine is the server - sleep means Meta can't deliver, and sustained failures make Meta disable the webhook | Keep the machine awake; re-subscribe the webhook in the Meta dashboard if Meta disabled it |
 
 ## Code map (for when you're asked to change something)
 

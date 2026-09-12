@@ -4,6 +4,20 @@ import { getMetaConfig, getProfile, incrementReplyCount, isDuplicateWebhookEvent
 import { findMatchingAutomation } from "@/lib/instagram/match";
 import { fetchInstagramProfile, logMetaApiError, sendDirectMessage } from "@/lib/instagram/api";
 
+const RATE_LIMIT_MS = 30000;
+
+// In-memory is enough here: one process, one account, and forgetting the
+// throttle on restart is harmless.
+const lastReplyBySender = new Map<string, number>();
+
+function allowSend(senderId: string): boolean {
+  const now = Date.now();
+  const last = lastReplyBySender.get(senderId);
+  if (last && now - last < RATE_LIMIT_MS) return false;
+  lastReplyBySender.set(senderId, now);
+  return true;
+}
+
 // --- Webhook payload shapes (subset of what Meta sends) ---
 interface WebhookMessage {
   mid?: string;
@@ -152,6 +166,13 @@ async function handleInteraction(args: {
     return;
   }
 
+  // Throttle per sender, but only once a keyword actually matched, so someone
+  // chatting normally can still trigger an automation right afterwards.
+  if (!allowSend(senderId)) {
+    console.warn(`⏳ Rate limited: skipping reply to ${senderId} (one reply per ${RATE_LIMIT_MS / 1000}s).`);
+    return;
+  }
+
   console.log(`✅ Match found for keyword "${automation.keyword}" - replying to ${senderId}...`);
 
   const { displayName } = await fetchInstagramProfile(senderId, profile.pageAccessToken);
@@ -159,19 +180,40 @@ async function handleInteraction(args: {
   const finalMessage = automation.replyMessage.replace(/\{name\}/gi, placeholderName);
 
   const recipientPayload = commentId ? { comment_id: commentId } : { id: senderId };
-  const dmRes = await sendDirectMessage(
-    profile.pageId,
-    recipientPayload,
-    finalMessage,
-    profile.pageAccessToken,
-    automation.buttonText,
-    automation.buttonUrl
-  );
+  const send = (token: string) =>
+    sendDirectMessage(
+      profile.pageId,
+      recipientPayload,
+      finalMessage,
+      token,
+      automation.buttonText,
+      automation.buttonUrl
+    );
+
+  let dmRes = await send(profile.pageAccessToken);
+
+  // Some Page setups reject the Page token with "cannot impersonate" (190/492).
+  // Lazyspond hit this in production; retrying with the user token clears it.
+  if (!dmRes.ok && profile.userAccessToken && profile.userAccessToken !== profile.pageAccessToken) {
+    const errBody = await dmRes
+      .clone()
+      .json()
+      .catch(() => null);
+    if (errBody?.error?.code === 190 && errBody?.error?.error_subcode === 492) {
+      console.log("Page token was blocked as impersonation, retrying with the user token...");
+      dmRes = await send(profile.userAccessToken);
+    }
+  }
 
   if (dmRes.ok) {
     console.log(`✉️ Reply sent to ${senderId}.`);
     await incrementReplyCount(automation.id);
   } else {
-    await logMetaApiError("DM send", dmRes);
+    const { errorMessage } = await logMetaApiError("DM send", dmRes);
+    if (errorMessage.includes('"code":190')) {
+      console.error(
+        "👉 Your Instagram connection has expired (Meta tokens last ~60 days). Open ManyMit and click Connect Instagram again."
+      );
+    }
   }
 }
