@@ -18,8 +18,8 @@ If it's saving you time (or making you money), the best "thank you" is a follow.
 ## The 60-second version
 
 1. You make a free Meta Developer App and add yourself as an **Instagram Tester** on it — this is the trick that skips Meta's App Review entirely, because you're both the developer *and* the tester.
-2. You drop that app's ID + Secret into a local `.env.local` file.
-3. `npm run dev` boots the app **and** a public tunnel together, so Meta can actually reach your laptop.
+2. `npm run dev` boots the app **and** a public tunnel together, so Meta can actually reach your laptop.
+3. You paste that app's ID + Secret into a form on the ManyMit home page — no config files to edit.
 4. You click "Connect Instagram," add a keyword → DM rule, done.
 
 Prefer to skip reading and just have an AI do it? Point Claude Code, Gemini
@@ -39,22 +39,16 @@ exactly what to walk you through vs. what only you can click.
 4. **App Roles → Roles** → add yourself as an **Instagram Tester**. Then on your phone: Instagram app → **Settings → Apps and Websites → Tester Invites → Accept**. (You can add up to 24 more people the same way — friends, clients, whoever.)
 5. **App Settings → Basic** → grab your **App ID** and **App Secret**.
 
-### 2. Configure & install
+### 2. Install
 
 ```bash
 git clone https://github.com/Amityst12/ManyMit.git
 cd ManyMit
 npm install
-cp .env.example .env.local
 ```
 
-Open `.env.local` and fill in:
-
-```env
-META_APP_ID=your_app_id
-META_APP_SECRET=your_app_secret
-INSTAGRAM_VERIFY_TOKEN=make-up-any-secret-string
-```
+That's it — no `.env.local` needed for this part. Your App ID and Secret go
+into the app itself once it's running (step 4).
 
 ### 3. (Optional but nice) get a permanent tunnel URL
 
@@ -65,6 +59,7 @@ each time. For a URL that never changes:
 1. Free account at [dashboard.ngrok.com](https://dashboard.ngrok.com) (no card).
 2. **Domains → New Domain** → copy it.
 3. **Your Authtoken** → copy that too.
+4. Create `.env.local` (`cp .env.example .env.local`) and fill in:
 
 ```env
 NGROK_AUTHTOKEN=your_authtoken
@@ -85,15 +80,20 @@ Your terminal prints your public URL and the two links you need:
    Webhook callback URL → https://your-domain.ngrok-free.app/api/webhooks/instagram
 ```
 
-Paste those into your Meta App dashboard:
+### 5. Finish setup in the browser
+
+Open the **public URL** printed above (not `localhost:3000` — Meta's login
+needs to redirect back to the same public address it's about to be
+registered under, so use that one from here on). It'll ask you to paste your
+**App ID** and **App Secret** from step 1 — do that, hit Save, and it hands
+you back a verify token plus the two URLs from above. Paste those into your
+Meta App dashboard:
 - **Facebook Login for Business → Settings → Valid OAuth Redirect URIs** → the OAuth redirect URI.
-- **Webhooks → Add Callback URL** → the webhook URL + your `INSTAGRAM_VERIFY_TOKEN` → **Subscribe** to `messages` and `comments`.
+- **Webhooks → Add Callback URL** → the webhook URL + the verify token it gave you → **Subscribe** to `messages` and `comments`.
 
-### 5. Connect & go
-
-Open [localhost:3000](http://localhost:3000) → **Connect Instagram** → log in
-→ pick your Page → add a keyword automation. Test it by replying to your own
-Story with the keyword from another account. DM should land in seconds.
+Then click **Connect Instagram** → log in → pick your Page → add a keyword
+automation. Test it by replying to your own Story with the keyword from
+another account. DM should land in seconds.
 
 Just leave your laptop running with `npm run dev` open — that's the whole
 infrastructure.
@@ -116,7 +116,7 @@ for messaging.
 
 ## Security
 
-- Your App Secret and tokens live only in `.env.local` and `data/db.json`, both git-ignored by default. Don't commit them, don't share them.
+- Your App Secret and access tokens live only in `data/db.json` on this machine, git-ignored by default. `.env.local` (only used for the optional ngrok settings) is git-ignored too. Don't commit either, don't share them.
 - Every webhook request is checked against Meta's signature before anything runs.
 
 ---

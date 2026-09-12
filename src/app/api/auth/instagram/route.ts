@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { getBaseUrl } from "@/lib/base-url";
+import { getMetaConfig } from "@/lib/store";
 
 export async function GET(request: Request) {
-  const appId = process.env.META_APP_ID;
-  if (!appId) {
+  const metaConfig = await getMetaConfig();
+  if (!metaConfig) {
     return new NextResponse(
-      "META_APP_ID is missing. Set it in your .env.local file first.",
-      { status: 500 }
+      "Meta App isn't configured yet. Go back to the ManyMit home page and fill in your App ID + Secret first.",
+      { status: 400 }
     );
   }
+  const appId = metaConfig.appId;
 
   const baseUrl = getBaseUrl(request);
   const redirectUri = `${baseUrl}/api/auth/callback/instagram`;

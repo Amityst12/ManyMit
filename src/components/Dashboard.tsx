@@ -10,18 +10,28 @@ type Status = {
   profile: { igAccountName: string; igAvatarUrl: string | null; connectedAt: string } | null;
 };
 
+type Config = {
+  configured: boolean;
+  appId: string | null;
+  verifyToken: string | null;
+};
+
 export default function Dashboard() {
   const [status, setStatus] = useState<Status | null>(null);
+  const [config, setConfig] = useState<Config | null>(null);
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [origin, setOrigin] = useState("");
   const [loading, setLoading] = useState(true);
+  const [editingConfig, setEditingConfig] = useState(false);
 
   const refresh = useCallback(async () => {
-    const [statusRes, automationsRes] = await Promise.all([
+    const [statusRes, configRes, automationsRes] = await Promise.all([
       fetch("/api/status").then((r) => r.json()),
+      fetch("/api/config").then((r) => r.json()),
       fetch("/api/automations").then((r) => r.json()),
     ]);
     setStatus(statusRes);
+    setConfig(configRes);
     setAutomations(automationsRes.automations || []);
     setLoading(false);
   }, []);
@@ -55,51 +65,199 @@ export default function Dashboard() {
         </p>
       </header>
 
-      {!status?.hasCredentials && <SetupChecklist origin={origin} />}
+      {/^(localhost|127\.0\.0\.1)$/.test(new URL(origin || "http://x").hostname) && (
+        <div className="mb-8 rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-200">
+          ⚠️ You&apos;re viewing this at <code>localhost</code>. Meta needs to redirect back to your{" "}
+          <strong>public tunnel URL</strong> instead (printed in the terminal where you ran{" "}
+          <code>npm run dev</code>) — open that URL in your browser before connecting Instagram, or
+          the login will fail with a redirect mismatch.
+        </div>
+      )}
 
-      {status?.hasCredentials && !status.connected && <ConnectCard />}
+      {(!config?.configured || editingConfig) && (
+        <MetaAppForm
+          origin={origin}
+          config={config}
+          onSaved={() => {
+            setEditingConfig(false);
+            refresh();
+          }}
+        />
+      )}
+
+      {config?.configured && !editingConfig && (
+        <ConfiguredBar config={config} onEdit={() => setEditingConfig(true)} />
+      )}
+
+      {config?.configured && !editingConfig && !status?.connected && <ConnectCard />}
 
       {status?.connected && status.profile && (
         <ConnectedCard profile={status.profile} onDisconnect={disconnect} />
       )}
 
-      {status?.connected && (
+      {status?.connected && !editingConfig && (
         <AutomationsManager automations={automations} onChange={refresh} />
       )}
 
-      <WebhookInfo origin={origin} />
+      {config?.configured && !editingConfig && <MetaDashboardReference origin={origin} config={config} />}
 
       <Footer />
     </main>
   );
 }
 
-function SetupChecklist({ origin }: { origin: string }) {
+function MetaAppForm({
+  origin,
+  config,
+  onSaved,
+}: {
+  origin: string;
+  config: Config | null;
+  onSaved: () => void;
+}) {
+  const [appId, setAppId] = useState(config?.appId || "");
+  const [appSecret, setAppSecret] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [saved, setSaved] = useState<{ verifyToken: string } | null>(null);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    const res = await fetch("/api/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ appId, appSecret }),
+    });
+    const data = await res.json();
+    setSubmitting(false);
+    if (res.ok) setSaved({ verifyToken: data.verifyToken });
+  }
+
+  // Right after saving, show the verify token + URLs once so they can paste
+  // it into the Meta dashboard before this panel disappears.
+  if (saved) {
+    return (
+      <section className="mb-8 rounded-2xl border border-white/10 bg-[var(--mm-panel)] p-6">
+        <h2 className="mb-3 text-lg font-semibold">✅ Saved — now finish the Meta dashboard side</h2>
+        <p className="mb-4 text-sm text-[var(--mm-muted)]">
+          Go back to your Meta App and paste these in:
+        </p>
+        <div className="space-y-2 text-xs text-[var(--mm-muted)]">
+          <div>
+            <span className="text-[var(--mm-text)]">OAuth redirect URI</span> (Facebook Login for
+            Business → Settings → Valid OAuth Redirect URIs):
+            <br />
+            <code className="text-[var(--mm-accent-1)]">{origin}/api/auth/callback/instagram</code>
+          </div>
+          <div>
+            <span className="text-[var(--mm-text)]">Webhook callback URL</span> (Webhooks → Add
+            Callback URL) + <span className="text-[var(--mm-text)]">verify token</span> (subscribe to{" "}
+            <code>messages</code> and <code>comments</code>):
+            <br />
+            <code className="text-[var(--mm-accent-1)]">{origin}/api/webhooks/instagram</code>
+            <br />
+            verify token: <code className="text-[var(--mm-accent-1)]">{saved.verifyToken}</code>
+          </div>
+        </div>
+        <button
+          onClick={onSaved}
+          className="mt-5 rounded-full bg-gradient-to-r from-[var(--mm-accent-1)] to-[var(--mm-accent-2)] px-5 py-2 text-sm font-medium text-white"
+        >
+          Done, continue
+        </button>
+      </section>
+    );
+  }
+
   return (
-    <section className="rounded-2xl border border-white/10 bg-[var(--mm-panel)] p-6">
-      <h2 className="mb-3 text-lg font-semibold">1. Set up your Meta App</h2>
+    <section className="mb-8 rounded-2xl border border-white/10 bg-[var(--mm-panel)] p-6">
+      <h2 className="mb-2 text-lg font-semibold">Set up your Meta App</h2>
       <p className="mb-4 text-sm text-[var(--mm-muted)]">
-        You haven&apos;t added your Meta App credentials to <code>.env.local</code> yet. Follow the{" "}
-        <code>README.md</code> to create your own free Meta Developer App (no App Review needed —
-        you add yourself as an Instagram Tester on your own app), then fill in:
+        Create a free app at{" "}
+        <a
+          href="https://developers.facebook.com/apps"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--mm-accent-1)] hover:underline"
+        >
+          developers.facebook.com/apps
+        </a>{" "}
+        (see <code>README.md</code> for the exact clicks — no App Review needed, you add yourself as
+        an Instagram Tester on your own app), then paste its credentials here:
       </p>
-      <pre className="overflow-x-auto rounded-lg bg-black/40 p-4 text-xs text-[var(--mm-muted)]">
-{`META_APP_ID=...
-META_APP_SECRET=...
-INSTAGRAM_VERIFY_TOKEN=any-secret-string-you-pick`}
-      </pre>
-      <p className="mt-4 text-sm text-[var(--mm-muted)]">
-        Your public tunnel URL will be shown in the terminal once you run <code>npm run dev</code>{" "}
-        (currently: <code>{origin || "starting…"}</code>). Paste it as the OAuth redirect URI and
-        webhook callback URL in your Meta App dashboard.
+      <form onSubmit={save} className="space-y-3">
+        <input
+          required
+          value={appId}
+          onChange={(e) => setAppId(e.target.value)}
+          placeholder="App ID"
+          className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-[var(--mm-accent-2)]"
+        />
+        <input
+          required
+          type="password"
+          value={appSecret}
+          onChange={(e) => setAppSecret(e.target.value)}
+          placeholder="App Secret"
+          className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-[var(--mm-accent-2)]"
+        />
+        {config?.configured && (
+          <p className="text-xs text-[var(--mm-muted)]">
+            Already configured — re-enter both fields to change them (the secret isn&apos;t shown back for security).
+          </p>
+        )}
+        <button
+          disabled={submitting}
+          className="rounded-full bg-gradient-to-r from-[var(--mm-accent-1)] to-[var(--mm-accent-2)] px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
+        >
+          {submitting ? "Saving…" : "Save"}
+        </button>
+      </form>
+      <p className="mt-4 text-xs text-[var(--mm-muted)]">
+        Saved locally to <code>data/db.json</code> on this machine only — never sent anywhere else,
+        never committed to git.
       </p>
     </section>
   );
 }
 
+function ConfiguredBar({ config, onEdit }: { config: Config; onEdit: () => void }) {
+  return (
+    <div className="mb-6 flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-xs text-[var(--mm-muted)]">
+      <span>
+        Meta App configured (ID: <code>{config.appId}</code>)
+      </span>
+      <button onClick={onEdit} className="text-[var(--mm-accent-1)] hover:underline">
+        Edit
+      </button>
+    </div>
+  );
+}
+
+function MetaDashboardReference({ origin, config }: { origin: string; config: Config }) {
+  return (
+    <details className="mb-8 rounded-xl border border-white/10 bg-black/20 p-4 text-xs text-[var(--mm-muted)]">
+      <summary className="cursor-pointer select-none text-[var(--mm-text)]">
+        Meta App dashboard values (redirect URI, webhook URL, verify token)
+      </summary>
+      <div className="mt-3 space-y-2">
+        <div>
+          OAuth redirect URI: <code className="text-[var(--mm-accent-1)]">{origin}/api/auth/callback/instagram</code>
+        </div>
+        <div>
+          Webhook callback URL: <code className="text-[var(--mm-accent-1)]">{origin}/api/webhooks/instagram</code>
+        </div>
+        <div>
+          Verify token: <code className="text-[var(--mm-accent-1)]">{config.verifyToken}</code>
+        </div>
+      </div>
+    </details>
+  );
+}
+
 function ConnectCard() {
   return (
-    <section className="rounded-2xl border border-white/10 bg-[var(--mm-panel)] p-8 text-center">
+    <section className="mb-8 rounded-2xl border border-white/10 bg-[var(--mm-panel)] p-8 text-center">
       <h2 className="mb-2 text-lg font-semibold">Connect your Instagram account</h2>
       <p className="mb-6 text-sm text-[var(--mm-muted)]">
         This opens Facebook Login. Pick the Page linked to your Instagram professional account.
@@ -283,20 +441,6 @@ function AutomationsManager({
           {submitting ? "Saving…" : "Add automation"}
         </button>
       </form>
-    </section>
-  );
-}
-
-function WebhookInfo({ origin }: { origin: string }) {
-  return (
-    <section className="rounded-2xl border border-white/10 bg-black/20 p-5 text-xs text-[var(--mm-muted)]">
-      <div className="mb-1 font-medium text-[var(--mm-text)]">Meta App configuration</div>
-      <div>
-        OAuth redirect URI: <code>{origin}/api/auth/callback/instagram</code>
-      </div>
-      <div>
-        Webhook callback URL: <code>{origin}/api/webhooks/instagram</code>
-      </div>
     </section>
   );
 }

@@ -25,16 +25,24 @@ export type Profile = {
   connectedAt: string;
 };
 
+export type MetaConfig = {
+  appId: string;
+  appSecret: string;
+  verifyToken: string;
+};
+
 export type StoreData = {
   profile: Profile | null;
   automations: Automation[];
   processedEventIds: string[];
+  metaConfig: MetaConfig | null;
 };
 
 const defaultData: StoreData = {
   profile: null,
   automations: [],
   processedEventIds: [],
+  metaConfig: null,
 };
 
 const DB_PATH = path.join(process.cwd(), "data", "db.json");
@@ -67,6 +75,24 @@ export async function clearProfile(): Promise<void> {
   await db.read();
   db.data.profile = null;
   await db.write();
+}
+
+export async function getMetaConfig(): Promise<MetaConfig | null> {
+  const db = await getDb();
+  await db.read();
+  return db.data.metaConfig;
+}
+
+export async function saveMetaConfig(appId: string, appSecret: string): Promise<MetaConfig> {
+  const db = await getDb();
+  await db.read();
+  // Keep the existing verify token on update (it's already pasted into the
+  // Meta dashboard) — only generate a fresh one the first time.
+  const verifyToken = db.data.metaConfig?.verifyToken || crypto.randomUUID().replace(/-/g, "");
+  const config: MetaConfig = { appId, appSecret, verifyToken };
+  db.data.metaConfig = config;
+  await db.write();
+  return config;
 }
 
 export async function listAutomations(): Promise<Automation[]> {

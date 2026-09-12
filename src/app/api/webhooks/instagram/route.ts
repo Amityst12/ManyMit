@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { getProfile, incrementReplyCount, isDuplicateWebhookEvent, listAutomations } from "@/lib/store";
+import { getMetaConfig, getProfile, incrementReplyCount, isDuplicateWebhookEvent, listAutomations } from "@/lib/store";
 import { findMatchingAutomation } from "@/lib/instagram/match";
 import { fetchInstagramProfile, logMetaApiError, sendCommentReply, sendDirectMessage } from "@/lib/instagram/api";
 
@@ -42,13 +42,13 @@ export async function GET(request: Request) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  const verifyToken = process.env.INSTAGRAM_VERIFY_TOKEN;
-  if (!verifyToken) {
-    console.error("INSTAGRAM_VERIFY_TOKEN is missing from .env.local.");
+  const metaConfig = await getMetaConfig();
+  if (!metaConfig) {
+    console.error("Meta App isn't configured yet — set it up on the ManyMit home page first.");
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 
-  if (mode === "subscribe" && token === verifyToken) {
+  if (mode === "subscribe" && token === metaConfig.verifyToken) {
     console.log("✅ Webhook verified by Meta.");
     return new NextResponse(challenge, { status: 200, headers: { "Content-Type": "text/plain" } });
   }
@@ -60,22 +60,21 @@ export async function POST(request: Request) {
     const rawBody = await request.text();
 
     // --- Signature verification: reject anything not actually from Meta ---
+    const metaConfig = await getMetaConfig();
+    if (!metaConfig) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
     const signatureHeader = request.headers.get("x-hub-signature-256");
-    const appSecret = process.env.META_APP_SECRET;
-    if (appSecret) {
-      if (!signatureHeader) {
-        return new NextResponse("Forbidden", { status: 403 });
-      }
-      const signature = signatureHeader.replace("sha256=", "");
-      const expected = crypto.createHmac("sha256", appSecret).update(rawBody).digest("hex");
-      const sigBuf = Buffer.from(signature, "hex");
-      const expBuf = Buffer.from(expected, "hex");
-      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
-        console.error("Invalid webhook signature — rejecting.");
-        return new NextResponse("Forbidden", { status: 403 });
-      }
-    } else {
-      console.warn("META_APP_SECRET not set — skipping signature verification (dev only).");
+    if (!signatureHeader) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+    const signature = signatureHeader.replace("sha256=", "");
+    const expected = crypto.createHmac("sha256", metaConfig.appSecret).update(rawBody).digest("hex");
+    const sigBuf = Buffer.from(signature, "hex");
+    const expBuf = Buffer.from(expected, "hex");
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      console.error("Invalid webhook signature — rejecting.");
+      return new NextResponse("Forbidden", { status: 403 });
     }
 
     const body = JSON.parse(rawBody) as WebhookPayload;

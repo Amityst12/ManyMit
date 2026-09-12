@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBaseUrl } from "@/lib/base-url";
-import { saveProfile } from "@/lib/store";
+import { getMetaConfig, saveProfile } from "@/lib/store";
 import { subscribePageToWebhooks } from "@/lib/instagram/api";
 
 export async function GET(request: Request) {
@@ -28,11 +28,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/?error=csrf_detected", baseUrl));
   }
 
-  const appId = process.env.META_APP_ID;
-  const appSecret = process.env.META_APP_SECRET;
-  if (!appId || !appSecret) {
+  const metaConfig = await getMetaConfig();
+  if (!metaConfig) {
     return NextResponse.redirect(new URL("/?error=server_config_error", baseUrl));
   }
+  const { appId, appSecret } = metaConfig;
 
   try {
     const redirectUri = `${baseUrl}/api/auth/callback/instagram`;

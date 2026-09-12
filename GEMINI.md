@@ -12,7 +12,9 @@ below is Gemini-CLI-specific on top of it.
   no session there. When AGENTS.md Step 1 or Step 5 needs a human action in
   their own Meta/Facebook/Instagram account, ask them to do it in their
   browser and paste back the result (App ID/Secret, or confirmation the
-  Instagram connection succeeded). Don't fabricate placeholder values.
+  Instagram connection succeeded). Don't fabricate placeholder values. App
+  ID/Secret get entered into the app's own web form, never into a file you
+  write yourself.
 - `npm run dev` launches two processes that keep running (the Next.js dev
   server and a tunnel) and never exit on their own — run it as a background
   shell command and read its output for the `🌍 Public URL:` line instead of
