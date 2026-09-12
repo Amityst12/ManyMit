@@ -19,17 +19,20 @@ export async function GET(request: Request) {
   authorizeUrl.searchParams.set("client_id", appId);
   authorizeUrl.searchParams.set("redirect_uri", redirectUri);
   authorizeUrl.searchParams.set("state", state);
-  // pages_show_list + business_management let us discover the connected Page;
-  // the instagram_* scopes grant messaging + comment reply access.
+  // Matches the exact scope list Lazyspond uses in production — trimming this
+  // down looks reasonable but pages_messaging/pages_read_engagement turn out
+  // to be required in practice, not just pages_show_list + instagram_basic.
   authorizeUrl.searchParams.set(
     "scope",
     [
-      "pages_show_list",
-      "pages_manage_metadata",
-      "business_management",
-      "instagram_basic",
       "instagram_manage_messages",
       "instagram_manage_comments",
+      "pages_manage_metadata",
+      "pages_messaging",
+      "pages_show_list",
+      "instagram_basic",
+      "business_management",
+      "pages_read_engagement",
     ].join(",")
   );
 

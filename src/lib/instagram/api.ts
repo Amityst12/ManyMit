@@ -124,7 +124,9 @@ export async function sendCommentReply(commentId: string, messageText: string, p
 
 export async function subscribePageToWebhooks(pageId: string, pageAccessToken: string) {
   const params = new URLSearchParams({
-    subscribed_fields: "messages,comments,mentions",
+    // Only fields the webhook route actually handles — "mentions" isn't
+    // implemented in this trimmed-down core, so we don't subscribe to it.
+    subscribed_fields: "messages,comments",
     access_token: pageAccessToken,
   });
   const res = await fetch(`${GRAPH_BASE}/${pageId}/subscribed_apps?${params.toString()}`, { method: "POST" });
